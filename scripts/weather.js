@@ -4,6 +4,8 @@ window.onload = ()=>{
     cityDropdown()
     
     let citiesDropdown = document.querySelector('#citiesDropdown')
+    let getLocationButton = document.querySelector('#getLocationButton')
+    getLocationButton.addEventListener('click',getYourLocationData)
     citiesDropdown.addEventListener('change', getCityData)
 }
 
@@ -62,5 +64,61 @@ function fetchingURL(url){
             let cell3 = newRow.insertCell(2)
             cell3.innerHTML = `${arrayData[j].shortForecast}`
         }
+    })
+}
+
+function getYourLocationData(){
+    const options = {
+        enableHighAccuracy: true,
+        timeout: 5000,
+        maximumAge: 0,
+      };
+      
+      function success(pos) {
+        const crd = pos.coords;
+        console.log(pos)
+        console.log("FOUND YOU: >:)");
+        // console.log(`Latitude : ${crd.latitude}`);
+        // console.log(`Longitude: ${crd.longitude}`);
+        console.log(`More or less ${crd.accuracy} meters.`);
+        fetch(`https://api.weather.gov/points/${crd.latitude},${crd.longitude}`)
+    .then((response)=>{
+        return response.json()
+    })
+    .then((yourData)=>{
+        yourForcast(yourData.properties.forecast)
+        console.log(yourData.properties.relativeLocation.properties.state)
+        let state = yourData.properties.relativeLocation.properties.state
+        let newRow = tableBody.insertRow(-1)
+        let cell1 = newRow.insertCell(0)
+        cell1.innerHTML = "FOUND YOU!!! >:) :"
+        let cell2 = newRow.insertCell(1)
+        cell2.innerHTML = state
+    })
+      }
+      function error(err) {
+        console.warn(`ERROR(${err.code}): ${err.message}`);
+      }
+    
+      navigator.geolocation.getCurrentPosition(success, error, options);
+  }
+function yourForcast(yourUrl){
+    
+    fetch(yourUrl)
+    .then((response)=>{
+        return response.json()
+    })
+    .then((yourWeatherData)=>{
+        let weatherData = yourWeatherData.properties.periods
+       console.log(weatherData)
+       for(let h =0;h<weatherData.length;h++){
+        let newRow = tableBody.insertRow(-1)
+        let cell1 = newRow.insertCell(0)
+        cell1.innerHTML = weatherData[h].name
+        let cell2 = newRow.insertCell(1)
+        cell2.innerHTML = `Temperature ${weatherData[h].temperature} ${weatherData[h].temperatureUnit} Winds ${weatherData[h].windDirection} ${weatherData[h].windSpeed}`
+        let cell3 = newRow.insertCell(2)
+        cell3.innerHTML = `${weatherData[h].shortForecast}`
+    }
     })
 }
